@@ -6,7 +6,7 @@ import './index.scss'
 import Router from '/@/routes/router';
 
 function handleLogin() {
-  Router.pushName('login', {
+  Router.pushName('navigate','login', {
     name: 'liuhao'
   })
 }

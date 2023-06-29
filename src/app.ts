@@ -1,19 +1,26 @@
-import React, { useEffect } from 'react'
-import { useDidShow, useDidHide } from '@tarojs/taro'
+import React, { useEffect } from "react";
+import { useDidShow, useDidHide } from "@tarojs/taro";
 // 全局样式
-import './app.scss'
+import "./app.scss";
+import Router from "./routes/router";
+
+Router.beforeEach((to, from, next) => {
+  console.log("to", to);
+  console.log("from", from);
+  next(to);
+});
 
 function App(props) {
   // 可以使用所有的 React Hooks
-  useEffect(() => {})
+  useEffect(() => {});
 
   // 对应 onShow
-  useDidShow(() => {})
+  useDidShow(() => {});
 
   // 对应 onHide
-  useDidHide(() => {})
+  useDidHide(() => {});
 
-  return props.children
+  return props.children;
 }
 
-export default App
+export default App;
