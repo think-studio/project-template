@@ -3,7 +3,7 @@ import {
   Button
 } from "@nutui/nutui-react-taro";
 import './index.scss'
-import Router from '../../routes/router';
+import Router from '/@/routes/router';
 
 function handleLogin() {
   Router.pushName('login', {

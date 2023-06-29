@@ -1,3 +1,5 @@
+const path = require("path");
+
 const config = {
   projectName: "mini",
   date: "2023-6-29",
@@ -19,6 +21,9 @@ const config = {
       },
     ],
   ],
+  alias: {
+    "/@": path.resolve(__dirname, "..", "src"),
+  },
   defineConstants: {},
   copy: {
     patterns: [],

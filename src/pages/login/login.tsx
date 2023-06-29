@@ -1,6 +1,6 @@
 import { View } from '@tarojs/components';
 import { useEffect } from 'react'
-import Router from '../../routes/router';
+import Router from '/@/routes/router';
 
 function Login() {
   useEffect(() => {
