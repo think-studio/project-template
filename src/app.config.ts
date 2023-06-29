@@ -1,5 +1,4 @@
 import { pages } from "./routes";
-
 export default defineAppConfig({
   pages: pages,
   window: {
@@ -8,4 +7,4 @@ export default defineAppConfig({
     navigationBarTitleText: 'WeChat',
     navigationBarTextStyle: 'black'
   }
-})
+});

@@ -56,7 +56,8 @@
     "qs": "^6.11.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-refresh": "^0.11.0"
+    "react-refresh": "^0.11.0",
+    "tarojs-plugin-generator": "^0.0.21"
   },
   "devDependencies": {
     "@babel/core": "^7.8.0",
