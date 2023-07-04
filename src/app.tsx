@@ -1,5 +1,9 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useDidShow, useDidHide } from '@tarojs/taro';
+
+import { Provider } from 'react-redux';
+import { store } from './store';
+
 // 全局样式
 import './app.scss';
 import Router from './routes/router';
@@ -20,7 +24,7 @@ function App(props) {
 	// 对应 onHide
 	useDidHide(() => {});
 
-	return props.children;
+	return <Provider store={store}>{props.children}</Provider>;
 }
 
 export default App;
