@@ -9,7 +9,7 @@ type ToType = 'navigate' | 'redirect';
 function joinParams(name, params?: Recordable) {
 	let url = routes[name];
 	if (params) {
-		url = `${url}?${qs.stringify(params)}`;
+		url = `/${url}?${qs.stringify(params)}`;
 	}
 	return url;
 }
@@ -28,7 +28,7 @@ function findRouteNameByPath(path?: string) {
 }
 
 function _to(type: ToType, name: RouteName, params?: Recordable) {
-	const url = '/' + joinParams(name, params);
+	const url = joinParams(name, params);
 	switch (type) {
 		case 'navigate':
 			Taro.navigateTo({
