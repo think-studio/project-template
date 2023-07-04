@@ -28,7 +28,7 @@ function findRouteNameByPath(path?: string) {
 }
 
 function _to(type: ToType, name: RouteName, params?: Recordable) {
-	const url = joinParams(name, params);
+	const url = '/' + joinParams(name, params);
 	switch (type) {
 		case 'navigate':
 			Taro.navigateTo({
