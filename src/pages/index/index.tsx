@@ -1,7 +1,7 @@
 import { View } from '@tarojs/components';
 import { Button } from '@nutui/nutui-react-taro';
-import './index.scss';
 import Router from '/@/routes/router';
+import { styled } from 'linaria/lib/react';
 
 function handleLogin() {
 	Router.pushName('navigate', 'login', {
@@ -11,14 +11,18 @@ function handleLogin() {
 
 function Index() {
 	return (
-		<View className='nutui-react-demo'>
-			<View className='index'>
-				<Button type='primary' className='btn' onClick={handleLogin}>
-					登录
-				</Button>
-			</View>
-		</View>
+		<Wrapper>
+			<Button type='primary' onClick={handleLogin}>
+				登录
+			</Button>
+		</Wrapper>
 	);
 }
 
 export default Index;
+
+const Wrapper = styled(View)`
+	position: relative;
+	height: 100vh;
+	overflow: hidden;
+`;
