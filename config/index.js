@@ -26,7 +26,8 @@ const config = {
 	},
 	defineConstants: {},
 	copy: {
-		patterns: [{ from: 'src/images', to: 'dist/images' }],
+		patterns: [],
+		// patterns: [{ from: 'src/images', to: 'dist/images' }],
 		options: {}
 	},
 	framework: 'react',
@@ -74,7 +75,7 @@ const config = {
 			chain.module
 				.rule('script')
 				.use('linariaLoader')
-				.loader('@linaria/webpack-loader')
+				.loader('@linaria/webpack5-loader')
 				.options({
 					sourceMap: process.env.NODE_ENV !== 'production'
 				});
@@ -126,7 +127,7 @@ const config = {
 			chain.module
 				.rule('script')
 				.use('linariaLoader')
-				.loader('@linaria/webpack-loader')
+				.loader('@linaria/webpack5-loader')
 				.options({
 					sourceMap: process.env.NODE_ENV !== 'production'
 				});

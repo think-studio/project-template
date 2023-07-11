@@ -68,6 +68,7 @@
 		"@linaria/core": "^4.2.8",
 		"@linaria/react": "^4.3.6",
 		"@linaria/webpack-loader": "^4.1.15",
+		"@linaria/webpack5-loader": "^4.1.17",
 		"@pmmmwh/react-refresh-webpack-plugin": "^0.5.10",
 		"@tarojs/cli": "3.6.8",
 		"@tarojs/taro-loader": "3.6.8",

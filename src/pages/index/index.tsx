@@ -24,5 +24,6 @@ export default Index;
 const Wrapper = styled(View)`
 	position: relative;
 	height: 100vh;
+	background: yellow;
 	overflow: hidden;
 `;
