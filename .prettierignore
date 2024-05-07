@@ -1,8 +1,0 @@
-dist
-node_modules
-out/
-.next
-.swc
-coverage
-
-packages/broker-icons/src/icons
