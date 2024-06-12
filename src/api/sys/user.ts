@@ -1,58 +1,55 @@
-import { LoginResultModel, MenuModel, UserInfoModel } from './model/userModel'
-import { ContentTypeEnum } from '/@/enums/httpEnum'
-import { defHttp } from '/@/utils/http/axios'
+import { defHttp } from '@/utils/http/axios';
+import { LoginParams, LoginResultModel, GetUserInfoModel } from './model/userModel';
 
-// 登录
-export function loginApi(params: any) {
+import { ErrorMessageMode } from '#/axios';
+
+enum Api {
+  Login = '/login',
+  Logout = '/logout',
+  GetUserInfo = '/getUserInfo',
+  GetPermCode = '/getPermCode',
+  TestRetry = '/testRetry',
+}
+
+/**
+ * @description: user login api
+ */
+export function loginApi(params: LoginParams, mode: ErrorMessageMode = 'modal') {
   return defHttp.post<LoginResultModel>(
     {
-      url: '/admin/admin_user/login',
-      params
+      url: Api.Login,
+      params,
     },
     {
-      withToken: false,
-      errorMessageMode: 'modal'
-    }
-  )
+      errorMessageMode: mode,
+    },
+  );
 }
 
-// 获取用户信息
-export function getUserInfoApi() {
-  return defHttp.get<UserInfoModel>({
-    url: '/admin/admin_user/userInfo'
-  }, {
-    errorMessageMode: 'modal'
-  })
+/**
+ * @description: getUserInfo
+ */
+export function getUserInfo() {
+  return defHttp.get<GetUserInfoModel>({ url: Api.GetUserInfo }, { errorMessageMode: 'none' });
 }
 
-// 退出登录
+export function getPermCode() {
+  return defHttp.get<string[]>({ url: Api.GetPermCode });
+}
+
 export function doLogout() {
-  return defHttp.post<boolean>({
-    url: '/admin/admin_user/logout'
-  }, {
-    errorMessageMode: 'modal'
-  })
+  return defHttp.get({ url: Api.Logout });
 }
 
-// 获取路由
-export function getUserRoutesApi() {
-  return defHttp.get<MenuModel[]>({
-    url: '/api/getUserRoutes'
-  })
-}
-
-// 查询用户登录日志
-export function getUserLoginLogApi(params: any) {
-  return defHttp.post<any>({
-    url: '/admin/loginLog/page',
-    params
-  })
-}
-
-// 重置用户密码
-export function resetPasswordApi(params: any) {
-  return defHttp.post<boolean>({
-    url: '/admin/admin_user/password/update',
-    params,
-  })
+export function testRetry() {
+  return defHttp.get(
+    { url: Api.TestRetry },
+    {
+      retryRequest: {
+        isOpenRetry: true,
+        count: 5,
+        waitTime: 1000,
+      },
+    },
+  );
 }

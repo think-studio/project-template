@@ -1,50 +1,38 @@
-import { RouteMeta } from 'vue-router'
-import { Component } from '/@/router/types'
-
-export interface MetaModel {
-  currentActiveMenu?: string
-  hideMenu: boolean
-  hideTab: boolean
-  title: string
-  single: boolean;
-}
-
-export interface MenuModel {
-  id: string
-  path: string
-  component: Component
-  currentActiveMenu: string;
-  meta: MetaModel
-  name: string
-  redirect: string
-  children: MenuModel[]
-  hideMenu: 'y' | 'n'
-  hideTab: 'y' | 'n'
-  icon: string
-  title: string
-  type: number
-}
-
-export interface PermissionModel {
-  permission: string
-}
-
-export interface LoginResultModel {
-  token: string;
-}
-
-export interface UserInfoModel {
-  id: string;
-  mobile: string;
-  avatarKey: string;
-  menus: MenuModel[];
-  permissionList: PermissionModel[];
+/**
+ * @description: Login interface parameters
+ */
+export interface LoginParams {
   username: string;
-  nickName: string;
-  roleName: string;
-  isSuperAdmin: number;
+  password: string;
 }
-interface StoreResp {
-  id: string;
-  companyName: string;
+
+export interface RoleInfo {
+  roleName: string;
+  value: string;
+}
+
+/**
+ * @description: Login interface return value
+ */
+export interface LoginResultModel {
+  userId: string | number;
+  token: string;
+  roles: RoleInfo[];
+}
+
+/**
+ * @description: Get user information return value
+ */
+export interface GetUserInfoModel {
+  roles: RoleInfo[];
+  // 用户id
+  userId: string | number;
+  // 用户名
+  username: string;
+  // 真实名字
+  realName: string;
+  // 头像
+  avatar: string;
+  // 介绍
+  desc?: string;
 }

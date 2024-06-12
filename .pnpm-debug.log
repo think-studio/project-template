@@ -1,0 +1,20 @@
+{
+  "0 error pnpm": {
+    "code": "ERR_PNPM_UNSUPPORTED_ENGINE",
+    "packageId": "D:\\fantasy\\github\\vue-vben-admin",
+    "wanted": {
+      "node": ">=18.12.0",
+      "pnpm": ">=9.0.2"
+    },
+    "current": {
+      "node": "v16.13.1",
+      "pnpm": "7.0.1"
+    },
+    "err": {
+      "name": "pnpm",
+      "message": "Unsupported engine for D:\\fantasy\\github\\vue-vben-admin: wanted: {\"node\":\">=18.12.0\",\"pnpm\":\">=9.0.2\"} (current: {\"node\":\"v16.13.1\",\"pnpm\":\"7.0.1\"})",
+      "code": "ERR_PNPM_UNSUPPORTED_ENGINE",
+      "stack": "pnpm: Unsupported engine for D:\\fantasy\\github\\vue-vben-admin: wanted: {\"node\":\">=18.12.0\",\"pnpm\":\">=9.0.2\"} (current: {\"node\":\"v16.13.1\",\"pnpm\":\"7.0.1\"})\n    at checkEngine (C:\\Users\\liuhao\\AppData\\Roaming\\nvm\\v16.13.1\\node_modules\\pnpm\\dist\\pnpm.cjs:41212:16)\n    at checkPackage (C:\\Users\\liuhao\\AppData\\Roaming\\nvm\\v16.13.1\\node_modules\\pnpm\\dist\\pnpm.cjs:43307:74)\n    at packageIsInstallable (C:\\Users\\liuhao\\AppData\\Roaming\\nvm\\v16.13.1\\node_modules\\pnpm\\dist\\pnpm.cjs:43330:61)\n    at exports2.default (C:\\Users\\liuhao\\AppData\\Roaming\\nvm\\v16.13.1\\node_modules\\pnpm\\dist\\pnpm.cjs:49155:46)\n    at async run (C:\\Users\\liuhao\\AppData\\Roaming\\nvm\\v16.13.1\\node_modules\\pnpm\\dist\\pnpm.cjs:176116:29)\n    at async runPnpm (C:\\Users\\liuhao\\AppData\\Roaming\\nvm\\v16.13.1\\node_modules\\pnpm\\dist\\pnpm.cjs:176379:5)\n    at async C:\\Users\\liuhao\\AppData\\Roaming\\nvm\\v16.13.1\\node_modules\\pnpm\\dist\\pnpm.cjs:176371:7"
+    }
+  }
+}

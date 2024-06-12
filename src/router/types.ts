@@ -1,30 +1,57 @@
-import { RouteMeta, RouteRecordRaw } from "vue-router";
+import type { RouteRecordRaw, RouteMeta } from 'vue-router';
+import { RoleEnum } from '@/enums/roleEnum';
+import { defineComponent } from 'vue';
 
 export type Component<T = any> =
-    | ReturnType<typeof defineComponent>
-    | (() => Promise<typeof import('*.vue')>)
-    | (() => Promise<T>);
+  | ReturnType<typeof defineComponent>
+  | (() => Promise<typeof import('*.vue')>)
+  | (() => Promise<T>);
 
-export interface AppRouteRecordRaw {
-    icon: string;
-    component?: Component | string;
-    children: AppRouteRecordRaw[];
-    hideMenu: "y" | "n";
-    currentActiveMenu: string;
-    hideTab: "y" | "n"
-    name: string;
-    path: string;
-    redirect?: string;
-    title: string;
-    meta: Recordable
+// @ts-ignore
+export interface AppRouteRecordRaw extends Omit<RouteRecordRaw, 'meta'> {
+  name: string;
+  meta: RouteMeta;
+  component?: Component | string;
+  components?: Component;
+  children?: AppRouteRecordRaw[];
+  props?: Recordable;
+  fullPath?: string;
 }
+
+export interface MenuTag {
+  type?: 'primary' | 'error' | 'warn' | 'success';
+  content?: string;
+  dot?: boolean;
+}
+
+export interface Menu {
+  name: string;
+
+  icon?: string;
+
+  img?: string;
+
+  path: string;
+
+  // path contains param, auto assignment.
+  paramPath?: string;
+
+  disabled?: boolean;
+
+  children?: Menu[];
+
+  orderNo?: number;
+
+  roles?: RoleEnum[];
+
+  meta?: Partial<RouteMeta>;
+
+  tag?: MenuTag;
+
+  hideMenu?: boolean;
+}
+
+export type MenuModule = Menu;
+
+// export type AppRouteModule = RouteModule | AppRouteRecordRaw;
 export type AppRouteModule = AppRouteRecordRaw;
-
-export interface BackMenuModel {
-    children: BackMenuModel[];
-    hideMenu: boolean;
-    name: string;
-    path: string;
-    title: string;
-    icon: string;
-}

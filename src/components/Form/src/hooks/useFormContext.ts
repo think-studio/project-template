@@ -1,5 +1,5 @@
-import { InjectionKey } from "vue";
-import { createContext, useContext } from "/@/hooks/core/useContext";
+import type { InjectionKey } from 'vue';
+import { createContext, useContext } from '@/hooks/core/useContext';
 
 export interface FormContextProps {
   resetAction: () => Promise<void>;
@@ -13,5 +13,5 @@ export function createFormContext(context: FormContextProps) {
 }
 
 export function useFormContext() {
-  return useContext(key);
+  return useContext<FormContextProps>(key);
 }

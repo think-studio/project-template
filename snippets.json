@@ -1,0 +1,34 @@
+{
+	"vbModal": {
+		"scope": "vue",
+		"prefix": "vbModal",
+		"body": [
+				"<template>",
+				"\t<BasicModal v-bind=\"\\$attrs\" @register=\"registerModal\"></BasicModal>",
+				"</template>",
+				" ",
+				"<script lang='ts' setup name='$1'>",
+					"import { BasicModal, useModalInner } from '@/components/Modal';",
+					" ",
+					"const [ registerModal ] = useModalInner(data => {",
+					" ",
+				"})",
+				"</script>"
+			],
+		"description": "生成一个modal"
+	},
+	"dProps": {
+		"scope": "typescript",
+		"prefix": "dProps",
+		"body": [
+			"interface Props {",
+			"\t$1",
+			"}",
+			" ",
+			"const props = withDefaults(defineProps<Props>(), {",
+			"\t$2",
+			"})"
+		],
+		"description": "定义一个props"
+	}
+}

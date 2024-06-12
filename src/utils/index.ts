@@ -1,8 +1,11 @@
-import { isObject } from "lodash-es";
-import { RouteLocationNormalized, Router, RouteRecordNormalized } from "vue-router";
-import type { App, Component, Plugin } from 'vue';
-import router from '/@/router/index'
-import reg from "./validate/reg";
+import type { RouteLocationNormalized, RouteRecordNormalized } from 'vue-router';
+import type { App, Component } from 'vue';
+
+import { intersectionWith, isEqual, mergeWith, unionWith } from 'lodash-es';
+import { unref } from 'vue';
+import { isArray, isObject } from '@/utils/is';
+
+export const noop = () => {};
 
 /**
  * @description:  Set ui mount node
@@ -11,140 +14,134 @@ export function getPopupContainer(node?: HTMLElement): HTMLElement {
   return (node?.parentNode as HTMLElement) ?? document.body;
 }
 
-export function getRawRoute(
-  route: RouteLocationNormalized
-): RouteLocationNormalized {
-  if (!route) return route;
-  const { matched, ...opt } = route;
-  return {
-    ...opt,
-    matched: (matched
-      ? matched.map((item) => ({
-        meta: item.meta,
-        name: item.name,
-        path: item.path,
-      }))
-      : undefined) as RouteRecordNormalized[],
-  };
+/**
+ * Add the object as a parameter to the URL
+ * @param baseUrl url
+ * @param obj
+ * @returns {string}
+ * eg:
+ *  let obj = {a: '3', b: '4'}
+ *  setObjToUrlParams('www.baidu.com', obj)
+ *  ==>www.baidu.com?a=3&b=4
+ */
+export function setObjToUrlParams(baseUrl: string, obj: any): string {
+  let parameters = '';
+  for (const key in obj) {
+    parameters += key + '=' + encodeURIComponent(obj[key]) + '&';
+  }
+  parameters = parameters.replace(/&$/, '');
+  return /\?$/.test(baseUrl) ? baseUrl + parameters : baseUrl.replace(/\/?$/, '?') + parameters;
 }
-
-export const withInstall = <T>(component: T, alias?: string) => {
-  const comp = component as any;
-  comp.install = (app: App) => {
-    app.component(comp.name || comp.displayName, component as Component);
-    if (alias) {
-      app.config.globalProperties[alias] = component;
-    }
-  };
-  return component as T & Plugin;
-};
 
 /**
- * 是否是外部链接
- * @param {string} path
- * @return {Boolean}
+ * Recursively merge two objects.
+ * 递归合并两个对象。
+ *
+ * @param source The source object to merge from. 要合并的源对象。
+ * @param target The target object to merge into. 目标对象，合并后结果存放于此。
+ * @param mergeArrays How to merge arrays. Default is "replace".
+ *        如何合并数组。默认为replace。
+ *        - "union": Union the arrays. 对数组执行并集操作。
+ *        - "intersection": Intersect the arrays. 对数组执行交集操作。
+ *        - "concat": Concatenate the arrays. 连接数组。
+ *        - "replace": Replace the source array with the target array. 用目标数组替换源数组。
+ * @returns The merged object. 合并后的对象。
  */
-export function isExternal(path: string) {
-  return /^(https?|ftp|mailto|tel):/.test(path);
+export function deepMerge<T extends object | null | undefined, U extends object | null | undefined>(
+  source: T,
+  target: U,
+  mergeArrays: 'union' | 'intersection' | 'concat' | 'replace' = 'replace',
+): T & U {
+  if (!target) {
+    return source as T & U;
+  }
+  if (!source) {
+    return target as T & U;
+  }
+  return mergeWith({}, source, target, (sourceValue, targetValue) => {
+    if (isArray(targetValue) && isArray(sourceValue)) {
+      switch (mergeArrays) {
+        case 'union':
+          return unionWith(sourceValue, targetValue, isEqual);
+        case 'intersection':
+          return intersectionWith(sourceValue, targetValue, isEqual);
+        case 'concat':
+          return sourceValue.concat(targetValue);
+        case 'replace':
+          return targetValue;
+        default:
+          throw new Error(`Unknown merge array strategy: ${mergeArrays as string}`);
+      }
+    }
+    if (isObject(targetValue) && isObject(sourceValue)) {
+      return deepMerge(sourceValue, targetValue, mergeArrays);
+    }
+    return undefined;
+  });
 }
 
-export function getDynamicProps<T, U>(props: T): Partial<U> {
+export function openWindow(
+  url: string,
+  opt?: { target?: TargetContext | string; noopener?: boolean; noreferrer?: boolean },
+) {
+  const { target = '__blank', noopener = true, noreferrer = true } = opt || {};
+  const feature: string[] = [];
+
+  noopener && feature.push('noopener=yes');
+  noreferrer && feature.push('noreferrer=yes');
+
+  window.open(url, target, feature.join(','));
+}
+
+// dynamic use hook props
+export function getDynamicProps<T extends Record<string, unknown>, U>(props: T): Partial<U> {
   const ret: Recordable = {};
 
-  Object.keys(props as any).map((key) => {
+  Object.keys(props).forEach((key) => {
     ret[key] = unref((props as Recordable)[key]);
   });
 
   return ret as Partial<U>;
 }
 
-export function deepMerge<T = any>(src: any = {}, target: any = {}): T {
-
-  Object.keys(target).forEach(key => {
-    src[key] = isObject(src[key])
-      ? deepMerge(src[key], target[key])
-      : (src[key] = target[key]);
-  })
-  return src;
+export function getRawRoute(route: RouteLocationNormalized): RouteLocationNormalized {
+  if (!route) return route;
+  const { matched, ...opt } = route;
+  return {
+    ...opt,
+    matched: (matched
+      ? matched.map((item) => ({
+          meta: item.meta,
+          name: item.name,
+          path: item.path,
+        }))
+      : undefined) as RouteRecordNormalized[],
+  };
 }
 
+// https://github.com/vant-ui/vant/issues/8302
+type EventShim = {
+  new (...args: any[]): {
+    $props: {
+      onClick?: (...args: any[]) => void;
+    };
+  };
+};
 
-/* 加载网络css文件 */
-export function loadCss(url: string): void {
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = url
-  link.crossOrigin = 'anonymous'
-  document.getElementsByTagName('head')[0].appendChild(link)
-}
+export type WithInstall<T> = T & {
+  install(app: App): void;
+} & EventShim;
 
-export const debounce = (fn: Function, ms: number) => {
-  return (...args: any[]) => {
-    if (window.lazy) {
-      clearTimeout(window.lazy)
+export type CustomComponent = Component & { displayName?: string };
+
+export const withInstall = <T extends CustomComponent>(component: T, alias?: string) => {
+  (component as Record<string, unknown>).install = (app: App) => {
+    const compName = component.name || component.displayName;
+    if (!compName) return;
+    app.component(compName, component);
+    if (alias) {
+      app.config.globalProperties[alias] = component;
     }
-    window.lazy = setTimeout(() => {
-      fn(...args)
-    }, ms)
-  }
-}
-
-export const setTitleFromRoute = () => {
-  if (typeof router.currentRoute.value.meta.title != 'string') {
-    return
-  }
-  nextTick(() => {
-    const webTitle = router.currentRoute.value.meta.title as string
-    document.title = `${webTitle}`
-  })
-}
-
-
-export const YNToBoolean = (value: 'y' | 'n') => {
-  return { 'y': true, 'n': false }[value]
-}
-
-export const routerBack = (route: any) => {
-  const back = window.history.state.back
-  if (back.indexOf('loading') !== -1) {
-    router.push(route.meta.currentActiveMenu)
-  } else {
-    router.back()
-  }
-}
-
-export const inputFormatterNumber = (val: string) => {
-  const temp = val
-    .replace(/^0+(\d)/, "$1")
-    .replace(/^\./, "0.")
-    .match(/^\d*(\.?\d{0,2})/g);
-  return temp ? temp[0] : "";
-}
-
-
-export function geoCoder(code: string, address: string): Promise<any> {
-  return new Promise((reslove, reject) => {
-    var geocoder = new (AMap as any).Geocoder({
-      city: code,
-    });
-
-    geocoder.getLocation(address, function (status: string, result: any) {
-      if (status === "complete" && result.geocodes.length) {
-        var lnglat = result.geocodes[0].location;
-        reslove(lnglat);
-      } else {
-        reslove(null);
-      }
-    });
-  });
-}
-
-export function thousanderAmount(value: string | number | undefined) {
-  if (value == undefined) {
-    return '-';
-  }
-  if (typeof value === 'number') {
-    value = value + ''
-  }
-  return '￥' + value.replace(reg.thousander, '$&,')
-}
+  };
+  return component as WithInstall<T>;
+};

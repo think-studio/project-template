@@ -1,13 +1,14 @@
 <template>
   <span :class="getClass">
     <slot></slot>
-    <BasicHelp :class="`${prefixCls}-help`" v-if="helpMessage" :content="helpMessage" />
+    <BasicHelp :class="`${prefixCls}-help`" v-if="helpMessage" :text="helpMessage" />
   </span>
 </template>
 <script lang="ts" setup>
   import type { PropType } from 'vue';
   import { useSlots, computed } from 'vue';
   import BasicHelp from './BasicHelp.vue';
+  import { useDesign } from '@/hooks/web/useDesign';
 
   const props = defineProps({
     /**
@@ -30,7 +31,7 @@
     normal: { type: Boolean },
   });
 
-  const prefixCls = 'basic-title';
+  const { prefixCls } = useDesign('basic-title');
   const slots = useSlots();
   const getClass = computed(() => [
     prefixCls,
@@ -38,13 +39,38 @@
     { [`${prefixCls}-normal`]: props.normal },
   ]);
 </script>
-<style lang="scss" scoped>
-  .basic-title {
+<style lang="less" scoped>
+  @prefix-cls: ~'@{namespace}-basic-title';
+
+  .@{prefix-cls} {
     display: flex;
-    align-items: center;
-  }
-  :deep(.basic-help) {
-    margin-left: 4px;
-    cursor: auto;
+    position: relative;
+    padding-left: 7px;
+    color: @text-color-base;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    cursor: pointer;
+    user-select: none;
+
+    &-normal {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    &-show-span::before {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 0;
+      width: 3px;
+      height: 16px;
+      margin-right: 4px;
+      background-color: @primary-color;
+    }
+
+    &-help {
+      margin-left: 10px;
+    }
   }
 </style>

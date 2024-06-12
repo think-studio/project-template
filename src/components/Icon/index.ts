@@ -1,4 +1,4 @@
-import Icon from './src/Icon.vue';
-import IconSelector from './src/Selector.vue';
+import SvgIcon from './src/SvgIcon.vue';
+import IconPicker from './src/IconPicker.vue';
 
-export { Icon, IconSelector }
+export { IconPicker, SvgIcon };

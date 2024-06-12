@@ -1,78 +1,143 @@
-import { UserInfoModel } from '/@/api/sys/model/userModel'
-import { getUserInfoApi, loginApi, doLogout } from '/@/api/sys/user'
-import { store } from '/@/store'
-import { orgInfoLocalData, tokenLocalData } from '/@/utils/storage/local-data'
-import { ElMessageBox } from 'element-plus'
-import { router } from '/@/router'
-import { useAppStore } from './app'
-
-import { OrganizationModel } from '/@/api/system/model/organizationModel'
-import { organizationDetailApi } from '/@/api/system/organization'
+import type { UserInfo } from '#/store';
+import type { ErrorMessageMode } from '#/axios';
+import { defineStore } from 'pinia';
+import { store } from '@/store';
+import { RoleEnum } from '@/enums/roleEnum';
+import { PageEnum } from '@/enums/pageEnum';
+import { ROLES_KEY, TOKEN_KEY, USER_INFO_KEY } from '@/enums/cacheEnum';
+import { getAuthCache, setAuthCache } from '@/utils/auth';
+import { GetUserInfoModel, LoginParams } from '@/api/sys/model/userModel';
+import { doLogout, getUserInfo, loginApi } from '@/api/sys/user';
+import { useI18n } from '@/hooks/web/useI18n';
+import { useMessage } from '@/hooks/web/useMessage';
+import { router } from '@/router';
+import { usePermissionStore } from '@/store/modules/permission';
+import { RouteRecordRaw } from 'vue-router';
+import { PAGE_NOT_FOUND_ROUTE } from '@/router/routes/basic';
+import { isArray } from '@/utils/is';
+import { h } from 'vue';
 
 interface UserState {
-  token?: string
-  userInfo?: UserInfoModel
-  permission?: string[]
-  sessionTimeout?: boolean
-  orgInfo?: OrganizationModel
+  userInfo: Nullable<UserInfo>;
+  token?: string;
+  roleList: RoleEnum[];
+  sessionTimeout?: boolean;
+  lastUpdateTime: number;
 }
 
-export const useUserStore = defineStore('app-user', {
+export const useUserStore = defineStore({
+  id: 'app-user',
   state: (): UserState => ({
+    // user info
+    userInfo: null,
+    // token
     token: undefined,
-    userInfo: undefined,
-    permission: undefined,
+    // roleList
+    roleList: [],
+    // Whether the login expired
     sessionTimeout: false,
-    orgInfo: undefined
+    // Last fetch time
+    lastUpdateTime: 0,
   }),
   getters: {
-    getToken(): Nullable<string> {
-      return this.token || tokenLocalData.get()
+    getUserInfo(state): UserInfo {
+      return state.userInfo || getAuthCache<UserInfo>(USER_INFO_KEY) || {};
     },
-    getPermission(): Nullable<string[]> {
-      return this.permission || []
+    getToken(state): string {
+      return state.token || getAuthCache<string>(TOKEN_KEY);
     },
-    getSessionTimeout(): boolean {
-      return !!this.sessionTimeout
+    getRoleList(state): RoleEnum[] {
+      return state.roleList.length > 0 ? state.roleList : getAuthCache<RoleEnum[]>(ROLES_KEY);
     },
-    getUserInfo(): UserInfoModel | undefined {
-      return this.userInfo
+    getSessionTimeout(state): boolean {
+      return !!state.sessionTimeout;
     },
-    getOrgInfo(): OrganizationModel | undefined {
-      return this.orgInfo
-    }
+    getLastUpdateTime(state): number {
+      return state.lastUpdateTime;
+    },
   },
   actions: {
-    setToken(token: string | undefined) {
-      this.token = token
-      tokenLocalData.set(token)
+    setToken(info: string | undefined) {
+      this.token = info ? info : ''; // for null or undefined value
+      setAuthCache(TOKEN_KEY, info);
     },
-    login(params: any) {
-      return new Promise(async (resolve, reject) => {
-        try {
-          const { token } = await (await loginApi(params)).data
-          this.setToken(token)
-          resolve(token)
-        } catch (error) {
-          reject(error);
+    setRoleList(roleList: RoleEnum[]) {
+      this.roleList = roleList;
+      setAuthCache(ROLES_KEY, roleList);
+    },
+    setUserInfo(info: UserInfo | null) {
+      this.userInfo = info;
+      this.lastUpdateTime = new Date().getTime();
+      setAuthCache(USER_INFO_KEY, info);
+    },
+    setSessionTimeout(flag: boolean) {
+      this.sessionTimeout = flag;
+    },
+    resetState() {
+      this.userInfo = null;
+      this.token = '';
+      this.roleList = [];
+      this.sessionTimeout = false;
+    },
+    /**
+     * @description: login
+     */
+    async login(
+      params: LoginParams & {
+        goHome?: boolean;
+        mode?: ErrorMessageMode;
+      },
+    ): Promise<GetUserInfoModel | null> {
+      try {
+        const { goHome = true, mode, ...loginParams } = params;
+        const data = await loginApi(loginParams, mode);
+        const { token } = data;
+
+        // save token
+        this.setToken(token);
+        return this.afterLoginAction(goHome);
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
+    async afterLoginAction(goHome?: boolean): Promise<GetUserInfoModel | null> {
+      if (!this.getToken) return null;
+      // get user info
+      const userInfo = await this.getUserInfoAction();
+
+      const sessionTimeout = this.sessionTimeout;
+      if (sessionTimeout) {
+        this.setSessionTimeout(false);
+      } else {
+        const permissionStore = usePermissionStore();
+
+        // 动态路由加载（首次）
+        if (!permissionStore.isDynamicAddedRoute) {
+          const routes = await permissionStore.buildRoutesAction();
+          [...routes, PAGE_NOT_FOUND_ROUTE].forEach((route) => {
+            router.addRoute(route as unknown as RouteRecordRaw);
+          });
+          // 记录动态路由加载完成
+          permissionStore.setDynamicAddedRoute(true);
         }
-      })
+
+        goHome && (await router.replace(userInfo?.homePath || PageEnum.BASE_HOME));
+      }
+      return userInfo;
     },
-    async setUserInfo() {
-      const res = await getUserInfoApi()
-      this.userInfo = res.data;
-      this.setPermission()
-      this.setOrgInfo();
-      useAppStore().setDictData()
-      return res.data
-    },
-    async setOrgInfo() {
-      const res = await organizationDetailApi();
-      this.orgInfo = res.data;
-      orgInfoLocalData.set(this.orgInfo)
-    },
-    setPermission() {
-      this.permission = this.userInfo?.permissionList?.map(item => item.permission)
+    async getUserInfoAction(): Promise<UserInfo | null> {
+      if (!this.getToken) return null;
+      const userInfo = await getUserInfo();
+      const { roles = [] } = userInfo;
+      if (isArray(roles)) {
+        const roleList = roles.map((item) => item.value) as RoleEnum[];
+        this.setRoleList(roleList);
+      } else {
+        userInfo.roles = [];
+        this.setRoleList([]);
+      }
+      this.setUserInfo(userInfo);
+      return userInfo;
     },
     /**
      * @description: logout
@@ -80,38 +145,48 @@ export const useUserStore = defineStore('app-user', {
     async logout(goLogin = false) {
       if (this.getToken) {
         try {
-          await doLogout()
+          await doLogout();
         } catch {
-          console.log('注销Token失败')
+          console.log('注销Token失败');
         }
       }
-      this.setToken(undefined)
-      this.setSessionTimeout(false)
-      goLogin && this.goLoginPage()
+      this.setToken(undefined);
+      this.setSessionTimeout(false);
+      this.setUserInfo(null);
+      if (goLogin) {
+        // 直接回登陆页
+        router.replace(PageEnum.BASE_LOGIN);
+      } else {
+        // 回登陆页带上当前路由地址
+        router.replace({
+          path: PageEnum.BASE_LOGIN,
+          query: {
+            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
+          },
+        });
+      }
     },
-    setSessionTimeout(flag: boolean) {
-      this.sessionTimeout = flag
-    },
-    goLoginPage() {
-      router.go(0)
-    },
+
     /**
      * @description: Confirm before logging out
      */
     confirmLoginOut() {
-      ElMessageBox.confirm('是否确认退出登录?', '温馨提醒', {
-        // confirmButtonText: 'OK',
-        // cancelButtonText: 'Cancel',
-        type: 'warning'
-      })
-        .then(async () => {
-          await this.logout(true)
-        })
-        .catch(() => { })
-    }
-  }
-})
+      const { createConfirm } = useMessage();
+      const { t } = useI18n();
+      createConfirm({
+        iconType: 'warning',
+        title: () => h('span', t('sys.app.logoutTip')),
+        content: () => h('span', t('sys.app.logoutMessage')),
+        onOk: async () => {
+          // 主动登出，不带redirect地址
+          await this.logout(true);
+        },
+      });
+    },
+  },
+});
 
+// Need to be used outside the setup
 export function useUserStoreWithOut() {
-  return useUserStore(store)
+  return useUserStore(store);
 }

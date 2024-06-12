@@ -1,27 +1,40 @@
 <template>
-  <ElConfigProvider :locale="zhCn">
-    <router-view></router-view>
-  </ElConfigProvider>
+  <ConfigProvider :locale="getAntdLocale" :theme="themeConfig">
+    <AppProvider>
+      <RouterView />
+    </AppProvider>
+  </ConfigProvider>
 </template>
+
 <script lang="ts" setup>
-import { ElConfigProvider } from "element-plus";
-import zhCn from "element-plus/es/locale/lang/zh-cn";
-import { setTitleFromRoute } from "/@/utils";
-import iconfontInit from "/@/utils/iconfont";
-import { useRoute } from "vue-router";
+  import { AppProvider } from '@/components/Application';
+  import { useTitle } from '@/hooks/web/useTitle';
+  import { useLocale } from '@/locales/useLocale';
+  import { ConfigProvider } from 'ant-design-vue';
 
-const route = useRoute();
+  import { useDarkModeTheme } from '@/hooks/setting/useDarkModeTheme';
+  import 'dayjs/locale/zh-cn';
+  import { computed } from 'vue';
 
-onMounted(() => {
-  iconfontInit();
-});
+  // support Multi-language
+  const { getAntdLocale } = useLocale();
 
-// 监听路由变化时更新浏览器标题
-watch(
-  () => route.path,
-  () => {
-    setTitleFromRoute();
-  }
-);
+  const { isDark, darkTheme } = useDarkModeTheme();
+
+  const themeConfig = computed(() =>
+    Object.assign(
+      {
+        token: {
+          colorPrimary: '#0960bd',
+          colorSuccess: '#55D187',
+          colorWarning: '#EFBD47',
+          colorError: '#ED6F6F',
+          colorInfo: '#0960bd',
+        },
+      },
+      isDark.value ? darkTheme : {},
+    ),
+  );
+  // Listening to page changes and dynamically changing site titles
+  useTitle();
 </script>
-<style scoped></style>

@@ -1,10 +1,10 @@
 import { Ref, unref, watchEffect } from 'vue';
-import { useTimeoutFn } from '/@/hooks/core/useTimeout';
+import { useTimeoutFn } from '@vben/hooks';
 
 export interface UseModalDragMoveContext {
   draggable: Ref<boolean>;
   destroyOnClose: Ref<boolean | undefined> | undefined;
-  visible: Ref<boolean>;
+  open: Ref<boolean>;
 }
 
 export function useModalDragMove(context: UseModalDragMoveContext) {
@@ -14,8 +14,8 @@ export function useModalDragMove(context: UseModalDragMoveContext) {
   const drag = (wrap: any) => {
     if (!wrap) return;
     wrap.setAttribute('data-drag', unref(context.draggable));
-    const dialogHeaderEl = wrap.querySelector('.el-dialog__header');
-    const dragDom = wrap.querySelector('.el-dialog');
+    const dialogHeaderEl = wrap.querySelector('.ant-modal-header');
+    const dragDom = wrap.querySelector('.ant-modal');
 
     if (!dialogHeaderEl || !dragDom || !unref(context.draggable)) return;
 
@@ -82,7 +82,7 @@ export function useModalDragMove(context: UseModalDragMoveContext) {
   };
 
   const handleDrag = () => {
-    const dragWraps = document.querySelectorAll('.el-dialog-wrap');
+    const dragWraps = document.querySelectorAll('.ant-modal-wrap');
     for (const wrap of Array.from(dragWraps)) {
       if (!wrap) continue;
       const display = getStyle(wrap, 'display');
@@ -97,7 +97,7 @@ export function useModalDragMove(context: UseModalDragMoveContext) {
   };
 
   watchEffect(() => {
-    if (!unref(context.visible) || !unref(context.draggable)) {
+    if (!unref(context.open) || !unref(context.draggable)) {
       return;
     }
     useTimeoutFn(() => {
